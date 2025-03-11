@@ -1,0 +1,155 @@
+use rand::Rng;
+
+use crate::{
+    faker::{
+        address::raw::{CityName, CityPrefix, CitySuffix},
+        impls::address::CityNameGenFn,
+        name::raw::{LastName, Name},
+    },
+    locales::Data,
+    Fake,
+};
+#[allow(non_camel_case_types)]
+#[derive(Copy, Clone)]
+pub struct AT;
+
+impl Data for AT {
+    const NAME_FIRST_NAME: &'static [&'static str] = &[
+        // Common Austrian male names
+        "Michael", "Thomas", "Andreas", "Christian", "Stefan", "Martin", "Daniel", "Josef",
+        "Peter", "Franz", "David", "Markus", "Alexander", "Johannes", "Wolfgang", "Lukas",
+        "Bernhard", "Florian", "Patrick", "Christoph", "Karl", "Gerhard", "Manfred", "Herbert",
+        "Robert", "Richard", "Walter", "Johann", "Matthias", "Hans", "Jürgen", "Harald",
+        "Günther", "Anton", "Klaus", "Helmut", "Erich", "Roman", "Paul", "Werner",
+        // Common Austrian female names
+        "Maria", "Anna", "Elisabeth", "Katharina", "Christine", "Eva", "Sarah", "Sabine",
+        "Sandra", "Lisa", "Julia", "Verena", "Barbara", "Karin", "Martina", "Claudia",
+        "Andrea", "Christina", "Michaela", "Stefanie", "Birgit", "Petra", "Monika", "Melanie",
+        "Magdalena", "Sonja", "Susanne", "Bettina", "Nicole", "Daniela", "Laura", "Johanna",
+        "Ursula", "Angelika", "Doris", "Jasmin", "Helga", "Silvia", "Carmen", "Ingrid"
+    ];
+    
+    const NAME_LAST_NAME: &'static [&'static str] = &[
+        // Common Austrian surnames
+        "Gruber", "Huber", "Wagner", "Müller", "Pichler", "Steiner", "Moser", "Mayer", 
+        "Hofer", "Leitner", "Berger", "Fuchs", "Eder", "Fischer", "Schmid", "Winkler", 
+        "Weber", "Schwarz", "Maier", "Schneider", "Reiter", "Bauer", "Brunner", "Wallner",
+        "Holzer", "Aigner", "Ebner", "Koller", "Lehner", "Winter", "Haas", "Auer", "Graf",
+        "Baumgartner", "Mayr", "Egger", "Wolf", "Lang", "Zimmermann", "Koch", "Hofmann",
+        "Pfeffer", "Kern", "Schuster", "Weiss", "Haider", "Stadler", "Strasser", "Riegler",
+        "Huemer", "Bruckner", "Zach", "Kurz", "Strobl", "Schober", "Wieser", "Kainz", "Rauch"
+    ];
+    
+    const NAME_TITLE: &'static [&'static str] = &["Frau", "Herr"];
+
+    const ADDRESS_STATE: &'static [&'static str] = &[
+        "Wien", "Niederösterreich", "Oberösterreich", "Steiermark", "Tirol", 
+        "Kärnten", "Salzburg", "Vorarlberg", "Burgenland"
+    ];
+
+    const ADDRESS_STATE_ABBR: &'static [&'static str] = &[
+        "W", "NÖ", "OÖ", "STMK", "T", "K", "S", "V", "B"
+    ];
+
+    const ADDRESS_COUNTRY: &'static [&'static str] = &["Österreich", "Austria"];
+    
+    const ADDRESS_CITY_SUFFIX: &'static [&'static str] = &[
+        "dorf", "stadt", "kirchen", "bach", "berg", "burg", "hausen", "hofen", "brunn", "feld"
+    ];
+
+    const ADDRESS_CITY_PREFIX: &'static [&'static str] = &[
+        "Sankt", "St.", "Alt", "Neu", "Bad", "Ober", "Unter", "Groß", "Klein", "Maria"
+    ];
+    
+    const ADDRESS_ZIP_FORMATS: &'static [&'static str] = &["####"];
+    
+    const ADDRESS_STREET_SUFFIX: &'static [&'static str] = &[
+        "straße", "gasse", "platz", "weg", "allee", "ring", "promenade", "zeile"
+    ];
+    
+    const ADDRESS_SECONDARY_ADDR_TYPE: &'static [&'static str] =
+        &["Stiege", "Stock", "Tür", "Top", "Eingang"];
+
+    const ADDRESS_STREET_TPL: &'static str = "{StreetName}{StreetSuffix}";
+
+    const COMPANY_SUFFIX: &'static [&'static str] = &[
+        "GmbH", "AG", "OG", "KG", "GmbH & Co KG", "e.U.", "GesmbH", "& Söhne", "& Co."
+    ];
+}
+
+impl CityNameGenFn for AT {
+    fn gen<R: Rng + ?Sized>(c: &CityName<Self>, rng: &mut R) -> String {
+        // Austrian rivers and lakes
+        const WATERS: [&str; 10] = [
+            "(Donau)", "(Mur)", "(Drau)", "(Inn)", "(Enns)", "(Salzach)", 
+            "(Neusiedler See)", "(Wörthersee)", "(Attersee)", "(Traunsee)"
+        ];
+
+        // Common formats for Austrian city names
+        const ADDRESS_CITY_WITHOUT_PREFIX: &str = "{CityName}{CitySuffix}";
+        const ADDRESS_CITY_WITHOUT_SPACE: &str = "{CityPrefix}{CityName}{CitySuffix}";
+        const ADDRESS_CITY_WITH_SPACE: &str = "{CityPrefix} {CityName}{CitySuffix}";
+        const ADDRESS_CITY_WITH_DASH_TPL: &str = "{CityPrefix}-{CityName}{CitySuffix}";
+        const ADDRESS_CITY_WITH_WATER_TPL: &str = "{CityName} am/an der {Water}";
+
+        let result = match (0..5).fake_with_rng::<u8, _>(rng) {
+            0 => ADDRESS_CITY_WITHOUT_SPACE
+                .replace(
+                    "{CityPrefix}",
+                    CityPrefix(c.0).fake_with_rng::<&str, _>(rng),
+                )
+                .replace(
+                    "{CityName}",
+                    (LastName(c.0).fake_with_rng::<String, _>(rng))
+                        .to_lowercase()
+                        .as_ref(),
+                )
+                .replace(
+                    "{CitySuffix}",
+                    CitySuffix(c.0).fake_with_rng::<&str, _>(rng),
+                ),
+            1 => ADDRESS_CITY_WITH_SPACE
+                .replace(
+                    "{CityPrefix}",
+                    CityPrefix(c.0).fake_with_rng::<&str, _>(rng),
+                )
+                .replace(
+                    "{CityName}",
+                    LastName(c.0).fake_with_rng::<String, _>(rng).as_ref(),
+                )
+                .replace(
+                    "{CitySuffix}",
+                    CitySuffix(c.0).fake_with_rng::<&str, _>(rng),
+                ),
+            2 => ADDRESS_CITY_WITH_DASH_TPL
+                .replace(
+                    "{CityPrefix}",
+                    CityPrefix(c.0).fake_with_rng::<&str, _>(rng),
+                )
+                .replace(
+                    "{CityName}",
+                    Name(c.0).fake_with_rng::<String, _>(rng).as_ref(),
+                )
+                .replace(
+                    "{CitySuffix}",
+                    CitySuffix(c.0).fake_with_rng::<&str, _>(rng),
+                ),
+            3 => ADDRESS_CITY_WITH_WATER_TPL
+                .replace(
+                    "{CityName}",
+                    Name(c.0).fake_with_rng::<String, _>(rng).as_ref(),
+                )
+                .replace("{Water}", WATERS[rng.random_range(0..WATERS.len())]),
+            _ => ADDRESS_CITY_WITHOUT_PREFIX
+                .replace(
+                    "{CityName}",
+                    Name(c.0).fake_with_rng::<String, _>(rng).as_ref(),
+                )
+                .replace(
+                    "{CitySuffix}",
+                    CitySuffix(c.0).fake_with_rng::<&str, _>(rng),
+                ),
+        };
+        result
+    }
+}
