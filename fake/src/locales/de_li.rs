@@ -78,7 +78,7 @@ impl CityNameGenFn for LI {
     fn gen<R: Rng + ?Sized>(c: &CityName<Self>, rng: &mut R) -> String {
         // Liechtenstein regions and landmarks
         const LOCATIONS: [&str; 6] = [
-            "(Rhein)", "(Alpen)", "(Oberland)", "(Unterland)", "(Eschnerberg)", "(Drei Schwestern)"
+            "(Rhein)", "(Eschnerberg)"
         ];
 
         // Common formats for Liechtenstein city names (limited since Liechtenstein has only 11 municipalities)
